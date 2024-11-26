@@ -111,3 +111,8 @@ test-suite zk-kyc-test
     build-depends:
         base                             ^>=4.18.1.0,
         zk-kyc                                      ,
+        aeson                                 >= 0.5,
+        symbolic-base                               ,
+        symbolic-apps                               ,
+        tasty-hunit                                 ,
+        tasty                                       ,
