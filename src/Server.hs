@@ -7,7 +7,8 @@ module Server where
 
 import           Data.Aeson                                  (FromJSON, ToJSON)
 import qualified Data.ByteString                             as BS
-import           GHC.Generics                                (Generic, U1 (..), unPar1, (:*:) (..))
+import           GHC.Generics                                (Generic, U1 (..), unPar1,
+                                                              (:*:) (..))
 import           GHC.TypeNats
 import           Prelude                                     (Int, error, return, undefined, ($), (.), (<$>))
 import           Servant                                     (Handler, JSON, Post, ReqBody, Server, type (:>))
@@ -17,7 +18,7 @@ import           Test.QuickCheck                             (arbitrary, generat
 import           ZkFold.Base.Algebra.Basic.Class             (FromConstant (..), ToConstant (..))
 import           ZkFold.Base.Algebra.Basic.Field
 import           ZkFold.Base.Algebra.EllipticCurve.BLS12_381
-import           ZkFold.Base.Algebra.EllipticCurve.Class
+import           ZkFold.Base.Algebra.EllipticCurve.Class     (EllipticCurve (ScalarField), Point)
 import           ZkFold.Base.Data.HFunctor                   (hmap)
 import           ZkFold.Base.Data.Vector
 import           ZkFold.Base.Protocol.NonInteractiveProof    (HaskellCore,
@@ -32,7 +33,7 @@ import           ZkFold.Base.Protocol.Plonkup.Witness        (PlonkupWitnessInpu
 import           ZkFold.Symbolic.Apps.KYC                    (KYCData (KYCData), kycExample)
 import           ZkFold.Symbolic.Compiler
 import           ZkFold.Symbolic.Data.Bool
-import           ZkFold.Symbolic.Data.ByteString             hiding (append)
+import           ZkFold.Symbolic.Data.ByteString             hiding (append, concat)
 import           ZkFold.Symbolic.Data.Combinators            (Iso (..), RegisterSize (Auto))
 import           ZkFold.Symbolic.Interpreter                 (Interpreter)
 
@@ -55,8 +56,8 @@ instance FromJSON (InputData N K Context)
 instance ToJSON (InputData N K Context)
 
 data OutputData = OutputData
-  { input :: Input (PlonkKYC 29 272),
-    proof :: Proof (PlonkKYC 29 272)
+  { input :: Input (PlonkKYC 29 512),
+    proof :: Proof (PlonkKYC 29 512)
   }
   deriving (Generic)
 
@@ -74,7 +75,10 @@ type API = "prove" :> ReqBody '[JSON] (InputData N K Context) :> Post '[JSON] Ou
 
 type PlonkKYC i n = Plonk U1 i n 1 BLS12_381_G1 BLS12_381_G2 BS.ByteString
 
-kycCheckVerification :: Vector 29 (ScalarField BLS12_381_G1) -> Fr -> PlonkupProverSecret BLS12_381_G1 -> (SetupVerify (PlonkKYC 29 272), Input (PlonkKYC 29 272), Proof (PlonkKYC 29 272))
+kycCheckVerification :: Vector 29 (ScalarField BLS12_381_G1)
+                     -> Fr
+                     -> PlonkupProverSecret BLS12_381_G1
+                     -> (SetupVerify (PlonkKYC 29 512), Input (PlonkKYC 29 512), Proof (PlonkKYC 29 512))
 kycCheckVerification witnessInputs x ps =
   let Bool ac = compile @Fr (kycExample @N @K @Auto @2) :: Bool (ArithmeticCircuit Fr U1 (((Vector K :*: Vector 1) :*: (Vector 1 :*: Vector N)) :*: (Vector 1 :*: U1)))
       ac2 = hmap (singleton . unPar1) ac
@@ -89,16 +93,17 @@ kycCheckVerification witnessInputs x ps =
           )
           ac2
 
-      (omega, k1, k2) = getParams 272
-      plonk = Plonk omega k1 k2 ac3 x :: PlonkKYC 29 272
+      (omega, k1, k2) = getParams 512
+      plonk = Plonk omega k1 k2 ac3 x :: PlonkKYC 29 512
       setupP = setupProve @_ @HaskellCore plonk
       setupV = setupVerify @_ @HaskellCore plonk
       witness = (PlonkupWitnessInput @U1 @29 @BLS12_381_G1 undefined witnessInputs, ps)
-      (input, proof) = prove @(PlonkKYC 29 272) @HaskellCore setupP witness
+      (input, proof) = prove @(PlonkKYC 29 512) @HaskellCore setupP witness
    in (setupV, input, proof)
 
 
-verifyKYCData :: KYCData N K Auto Context -> (SetupVerify (PlonkKYC 29 272), Input (PlonkKYC 29 272), Proof (PlonkKYC 29 272))
+verifyKYCData :: KYCData N K Auto Context 
+              -> (SetupVerify (PlonkKYC 29 512), Input (PlonkKYC 29 512), Proof (PlonkKYC 29 512))
 verifyKYCData (KYCData t id hash value) =
   let
     (x, y) = splitAt @8 @10 (toWords value)

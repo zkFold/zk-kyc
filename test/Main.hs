@@ -13,4 +13,4 @@ main = defaultMain $
     testCase "KYC example test case" $ do
     json <- readFileJSON "example-json/kyc-data.json" :: IO (InputData N K Context)
     let !(s, i, p) = verifyKYCData (kycData json)
-    assertEqual "Verify result must be true" True $ verify @(PlonkKYC 29 272) @HaskellCore s i p
+    assertEqual "Verify result must be true" True $ verify @(PlonkKYC 29 512) @HaskellCore s i p
