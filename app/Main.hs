@@ -4,11 +4,10 @@ import           Data.Semigroup           ((<>))
 import           Network.Wai
 import           Network.Wai.Handler.Warp (Port, defaultSettings, runSettings, setBeforeMainLoop, setPort, setTimeout)
 import           Options.Applicative
-import           Prelude                  (Int, return, show)
-import           Prelude.Compat           (IO, putStrLn, ($))
+import           Prelude                  (Int, show)
+import           Prelude.Compat           (IO, ($))
 import           Servant
 import           Server                   (API, server)
-import           System.Environment       (lookupEnv)
 import           System.IO                (hPutStrLn, stderr)
 
 userAPI :: Proxy API
