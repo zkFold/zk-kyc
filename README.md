@@ -1,5 +1,7 @@
 # zkKYC server
 
+Working with GHC 9.6.7 and Cabal 3.12.1.0
+
 ## Running the server
 
 Replace XXXX with the port number (default is 3000) and timeout (default is 300)

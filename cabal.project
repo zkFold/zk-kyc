@@ -10,3 +10,9 @@ source-repository-package
   tag: e79ab6cebec9d631d348dd8eebda90f716903a43
 
 packages: .
+
+allow-newer: 
+    base                ,
+    template-haskell    , 
+    deepseq             ,
+    ghc-bignum
