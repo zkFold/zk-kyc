@@ -87,7 +87,7 @@ library
     hs-source-dirs:   src
     default-language: Haskell2010
 
-executable zk-kyc
+executable prover-server
     import:           options
     main-is:          Main.hs
     build-depends:

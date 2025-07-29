@@ -2,13 +2,14 @@
 
 Working with GHC 9.6.7 and Cabal 3.12.1.0
 
-## Running the server
+## Running the prover server
 
 Replace XXXX with the port number (default is 3000) and timeout (default is 300)
 
 ```bash
-cabal run zk-kyc
-cabal run zk-kyc -- --port XXXX --timeout XXX
+cabal run prover-server
+# or
+cabal run prover-server -- --port XXXX --timeout XXX
 ```
 
 When the server is running, you can query it via curl (assuming that the port is set to 3000):
