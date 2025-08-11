@@ -72,22 +72,20 @@ common options
 
 library
     import:           options
-    exposed-modules:  Server
-    -- other-modules:
-    -- other-extensions:
+    exposed-modules:  
+        Server
+        , KYC
     build-depends:    
         base                          >= 4.9 && < 5,
         aeson                                >= 0.5,
         bytestring                                 ,
         servant-server                             ,
         symbolic-base                              ,
-        symbolic-apps                              ,
         QuickCheck                                 ,
-        zkfold-prover,
     hs-source-dirs:   src
     default-language: Haskell2010
 
-executable prover-server
+executable kyc-server
     import:           options
     main-is:          Main.hs
     build-depends:
@@ -104,8 +102,6 @@ executable prover-server
 test-suite zk-kyc-test
     import:           options
     default-language: Haskell2010
-    -- other-modules:
-    -- other-extensions:
     type:             exitcode-stdio-1.0
     hs-source-dirs:   test
     main-is:          Main.hs
@@ -115,4 +111,3 @@ test-suite zk-kyc-test
         symbolic-base                               ,
         tasty-hunit                                 ,
         tasty                                       ,
-        zkfold-prover,
