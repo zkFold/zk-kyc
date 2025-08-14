@@ -15,7 +15,7 @@ import ZkFold.Data.Eq (Eq (..), elem)
 import ZkFold.Data.Vector (Vector, splitAt, toVector)
 import ZkFold.Symbolic.Class (Symbolic (BaseField))
 import ZkFold.Symbolic.Data.Bool (Bool, not, (&&))
-import ZkFold.Symbolic.Data.ByteString (ByteString, Resize (resize), concat, toWords)
+import ZkFold.Symbolic.Data.ByteString
 import ZkFold.Symbolic.Data.Class (SymbolicData)
 import ZkFold.Symbolic.Data.Combinators (
   Ceil,
@@ -52,12 +52,6 @@ data KYCData n k r context = KYCData
   , kycValue :: ByteString n context
   }
   deriving (Generic, Show)
-
-data User r context = User
-  { userAge :: UInt 8 r context
-  , userCountry :: ByteString 10 context
-  }
-  deriving Generic
 
 instance
   ( Symbolic context
@@ -97,27 +91,34 @@ instance
 isCitizen :: Symbolic c => KYCByteString c -> Vector n (KYCByteString c) -> Bool c
 isCitizen = elem
 
+type N = 18
+
+data User r context = User
+  { userAge :: UInt 8 r context
+  , userCountry :: ByteString 10 context
+  }
+  deriving Generic
+
 kycExample
-  :: forall n k r rsc context
+  :: forall k r rsc context
    . ( Symbolic context
-     , KnownNat n
      , KnownNat rsc
      , KnownRegisterSize r
      , KnownNat (NumberOfRegisters (BaseField context) 8 r)
      , KnownNat (Ceil (GetRegisterSize (BaseField context) 8 r) OrdWord)
      , KnownNat (NumberOfRegisters (BaseField context) k r)
      )
-  => KYCData n k r context -> UInt k r context -> Bool context
+  => KYCData N k r context -> UInt k r context -> Bool context
 kycExample kycData hash =
   let
-    v :: (Vector 8 (ByteString 1 context), Vector 10 (ByteString 1 context))
-    v = splitAt @8 @10 $ toWords $ resize $ kycValue kycData
+    v :: ByteString N context
+    v = kycValue kycData
 
     correctHash :: Bool context
     correctHash = hash == kycHash kycData
 
     user :: User r context
-    user = User (from $ concat $ fst v) (concat $ snd v)
+    user = User (from $ truncate @N @8 v) (dropN v)
 
     validAge :: Bool context
     validAge = userAge user >= fromConstant (18 :: Natural)

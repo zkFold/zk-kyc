@@ -1,9 +1,8 @@
 {
-    "statementId": 1,
     "kycData": {
-        "kycHash": 35,
-        "kycID": 188,
         "kycType": "87",
-        "kycValue": "6588"
+        "kycID": 188,
+        "kycHash": 35,
+        "kycValue": "1b988"
     }
 }

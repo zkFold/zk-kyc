@@ -25,6 +25,7 @@ import ZkFold.Algebra.Number
 import ZkFold.Algebra.Polynomial.Univariate (PolyVec)
 import ZkFold.ArithmeticCircuit (ArithmeticCircuit (..))
 import ZkFold.Data.Vector
+import ZkFold.FFI.Rust.Plonkup
 import ZkFold.Protocol.NonInteractiveProof (
   NonInteractiveProof (..),
   prove,
@@ -44,11 +45,9 @@ import ZkFold.Symbolic.Data.Combinators (RegisterSize (Auto))
 import ZkFold.Symbolic.Interpreter (Interpreter, runInterpreter)
 import Prelude
 
-import KYC (KYCData (..), kycExample)
+import KYC (KYCData (..), N, kycExample)
 
 type Constraints = 2 ^ 17
-
-type N = 18
 
 type K = 8
 
@@ -101,7 +100,7 @@ type PlonkKYC =
   Plonkup CompiledInput Par1 Constraints BLS12_381_G1_JacobianPoint BLS12_381_G2_JacobianPoint BS.ByteString (PolyVec Fr)
 
 circuit :: ArithmeticCircuit Fr CompiledInput Par1
-circuit = compile @Fr (kycExample @N @K @Auto @2)
+circuit = compile @Fr (kycExample @K @Auto @2)
 
 x :: Fr
 x = one
@@ -134,7 +133,7 @@ kycCheckVerification kycData ps =
     hash = runInterpreter $ arithmetize $ kycHash kycData
     paddedWitnessInputs = (((U1 :*: U1) :*: (U1 :*: U1)) :*: (U1 :*: U1)) :*: (witnessInputs :*: (hash :*: U1))
     witness = (PlonkupWitnessInput @CompiledInput @BLS12_381_G1_JacobianPoint paddedWitnessInputs, ps)
-    !(input, proof) = prove @PlonkKYC setupP witness
+    !(input, proof, _) = rustPlonkupProve @CompiledInput @Par1 @Constraints setupP witness
    in
     (input, proof)
 
@@ -148,4 +147,3 @@ server = serverProve :<|> serverVerify
 
   serverVerify :: ProverOutput -> Handler Bool
   serverVerify (ProverOutput i p) = pure $ verify @PlonkKYC setupV i p
-  
