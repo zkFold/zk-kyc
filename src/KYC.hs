@@ -5,14 +5,14 @@ module KYC where
 
 import Data.Aeson
 import Data.Functor ((<$>))
-import Data.Maybe (Maybe (..), fromJust)
+import Data.Maybe (Maybe (..))
 import GHC.Generics (Generic)
 import ZkFold.Algebra.Class (FromConstant (fromConstant))
 import ZkFold.Algebra.Field (Zp)
 import ZkFold.Algebra.Number
 import ZkFold.Control.HApplicative (HApplicative)
 import ZkFold.Data.Eq (Eq (..), elem)
-import ZkFold.Data.Vector (Vector, splitAt, toVector)
+import ZkFold.Data.Vector (Vector, toVector)
 import ZkFold.Symbolic.Class (Symbolic (BaseField))
 import ZkFold.Symbolic.Data.Bool (Bool, not, (&&))
 import ZkFold.Symbolic.Data.ByteString
@@ -28,7 +28,7 @@ import ZkFold.Symbolic.Data.Input (SymbolicInput)
 import ZkFold.Symbolic.Data.Ord (Ord ((>=)))
 import ZkFold.Symbolic.Data.UInt (OrdWord, UInt)
 import ZkFold.Symbolic.Interpreter (Interpreter)
-import Prelude (Show (..), String, error, fst, snd, ($), (.))
+import Prelude (Show (..), String, error, ($), (.))
 
 type KYCByteString context = ByteString 256 context
 

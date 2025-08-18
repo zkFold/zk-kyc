@@ -1,13 +1,11 @@
 module Main where
 
-import Data.Semigroup ((<>))
 import Network.Wai
 import Network.Wai.Handler.Warp (Port, defaultSettings, runSettings, setBeforeMainLoop, setPort, setTimeout)
 import Options.Applicative
-import Prelude.Compat (IO, ($))
 import Servant
 import System.IO (hPutStrLn, stderr)
-import Prelude (Int, show)
+import Prelude
 
 import Server (API, server)
 
@@ -54,10 +52,10 @@ run port timeout = do
   runSettings settings app
  where
   settings =
-    setPort port $
-      setTimeout timeout $
-        setBeforeMainLoop (hPutStrLn stderr ("Listening on port " <> show port <> ", timeout " <> show timeout)) $
-          defaultSettings
+    setPort port
+      $ setTimeout timeout
+      $ setBeforeMainLoop (hPutStrLn stderr ("Listening on port " <> show port <> ", timeout " <> show timeout))
+      $ defaultSettings
 
 main :: IO ()
 main = do
