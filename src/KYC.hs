@@ -1,18 +1,25 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module KYC where
+-- |
+-- This module contains the KYC data type, as well as examples of user data and a contract that validates this data.
+module KYC (
+  KYCData (..),
+  User (..),
+  kycExample,
+  userA,
+) where
 
 import Data.Aeson
 import Data.Functor ((<$>))
-import Data.Maybe (Maybe (..), fromJust)
+import Data.Maybe (Maybe (..))
 import GHC.Generics (Generic)
 import ZkFold.Algebra.Class (FromConstant (fromConstant))
 import ZkFold.Algebra.Field (Zp)
 import ZkFold.Algebra.Number
 import ZkFold.Control.HApplicative (HApplicative)
 import ZkFold.Data.Eq (Eq (..), elem)
-import ZkFold.Data.Vector (Vector, splitAt, toVector)
+import ZkFold.Data.Vector (Vector, toVector)
 import ZkFold.Symbolic.Class (Symbolic (BaseField))
 import ZkFold.Symbolic.Data.Bool (Bool, not, (&&))
 import ZkFold.Symbolic.Data.ByteString
@@ -28,9 +35,7 @@ import ZkFold.Symbolic.Data.Input (SymbolicInput)
 import ZkFold.Symbolic.Data.Ord (Ord ((>=)))
 import ZkFold.Symbolic.Data.UInt (OrdWord, UInt)
 import ZkFold.Symbolic.Interpreter (Interpreter)
-import Prelude (Show (..), String, error, fst, snd, ($), (.))
-
-type KYCByteString context = ByteString 256 context
+import Prelude (Show (..), String, error, ($), (.))
 
 {-
 >>> type Prime256_1 = 28948022309329048855892746252171976963363056481941560715954676764349967630337
@@ -45,6 +50,8 @@ exKYC = KYCData
 >>> encode exKYC
 "{\"kycHash\":\"bb8\",\"kycID\":4000,\"kycType\":\"3e8\",\"kycValue\":\"7d0\"}"
 -}
+
+-- | KYC data type
 data KYCData n k r context = KYCData
   { kycType :: ByteString k context
   , kycID :: UInt k r context
@@ -88,37 +95,45 @@ instance
   )
   => SymbolicInput (KYCData n k r context)
 
-isCitizen :: Symbolic c => KYCByteString c -> Vector n (KYCByteString c) -> Bool c
-isCitizen = elem
-
-type N = 18
-
+-- | User data type
 data User r context = User
   { userAge :: UInt 8 r context
+  -- ^ user age
   , userCountry :: ByteString 10 context
+  -- ^ user country information
   }
   deriving Generic
 
+-- | Example of KYC contract. Includes
+--
+--   - hash validation
+--
+--   - user age verification (> 18)
+--
+--   - user country is not in the list of restrictions
 kycExample
-  :: forall k r rsc context
+  :: forall n k r rsc context
    . ( Symbolic context
      , KnownNat rsc
      , KnownRegisterSize r
      , KnownNat (NumberOfRegisters (BaseField context) 8 r)
      , KnownNat (Ceil (GetRegisterSize (BaseField context) 8 r) OrdWord)
      , KnownNat (NumberOfRegisters (BaseField context) k r)
+     , 8 <= n
+     , 10 <= n
+     , KnownNat (n - 10)
      )
-  => KYCData N k r context -> UInt k r context -> Bool context
+  => KYCData n k r context -> UInt k r context -> Bool context
 kycExample kycData hash =
   let
-    v :: ByteString N context
+    v :: ByteString n context
     v = kycValue kycData
 
     correctHash :: Bool context
     correctHash = hash == kycHash kycData
 
     user :: User r context
-    user = User (from $ truncate @N @8 v) (dropN v)
+    user = User (from $ truncate @n @8 v) (dropN v)
 
     validAge :: Bool context
     validAge = userAge user >= fromConstant (18 :: Natural)
@@ -128,6 +143,7 @@ kycExample kycData hash =
    in
     correctHash && validAge && validCountry
 
+-- | Example of user data
 userA
   :: forall r context
    . ( Symbolic context

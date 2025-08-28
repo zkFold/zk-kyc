@@ -23,3 +23,11 @@ Verify request:
 ```bash
 curl -X POST -H "Content-Type: application/json" --connect-timeout 300 -d @example-json/prover-output.json localhost:3000/verify
 ```
+
+## Docs
+For generate documenatation you can run
+```bash
+cabal haddock
+```
+
+After that you can open the `index.html` file using the displayed path.
