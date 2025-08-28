@@ -2,12 +2,14 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module Server where
+-- | Module providing KYC server interface
+module Server (API, server, VerifierInput, ProverOutput, ProverInput) where
 
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.ByteString as BS
 import GHC.Generics (Generic, Par1, U1 (..), (:*:) (..))
 import GHC.TypeNats
+import KYC (KYCData (..), kycExample)
 import Servant (
   Handler,
   JSON,
@@ -47,22 +49,25 @@ import ZkFold.Symbolic.Data.Combinators (RegisterSize (Auto))
 import ZkFold.Symbolic.Interpreter (Interpreter, runInterpreter)
 import Prelude hiding (Num (..), (!!))
 
-import KYC (KYCData (..), N, kycExample)
-
 type Constraints = 2 ^ 17
+
+type N = 18
 
 type K = 8
 
 type Context = (Interpreter Fr)
 
+-- | Input for '/prove' endpoint
 newtype ProverInput = ProverInput (KYCData N K Auto Context)
   deriving Generic
 
 instance FromJSON ProverInput
 
+-- | Result for '/prove' endpoint
 data ProverOutput = ProverOutput (Input HaskellPlonkKYC) (Proof HaskellPlonkKYC)
   deriving Generic
 
+-- | Input for '/verify' endpoint
 data VerifierInput = VerifierInput (Input PlonkKYC) (Proof PlonkKYC)
   deriving Generic
 
@@ -95,6 +100,7 @@ instance (FromJSON c, FromJSON (ScalarFieldOf c)) => FromJSON (PlonkupProof c)
 
 instance FromJSON ProverOutput
 
+-- | Public API of KYC server
 type API =
   "prove" :> ReqBody '[JSON] ProverInput :> Post '[JSON] ProverOutput
     :<|> "verify" :> ReqBody '[JSON] VerifierInput :> Post '[JSON] Bool
@@ -110,7 +116,7 @@ type HaskellPlonkKYC =
   Plonkup CompiledInput Par1 Constraints BLS12_381_G1_Point BLS12_381_G2_Point BS.ByteString (PolyVec EC.Fr)
 
 circuit :: ArithmeticCircuit Fr CompiledInput Par1
-circuit = compile @Fr (kycExample @K @Auto @2)
+circuit = compile @Fr (kycExample @N @K @Auto @2)
 
 plonk :: PlonkKYC
 plonk = Plonkup omega k1 k2 circuit h1 gs
@@ -139,6 +145,7 @@ kycCheckVerification kycData ps =
    in
     (input, proof)
 
+-- | Server providing public API of KYC server
 server :: Server API
 server = serverProve :<|> serverVerify
  where

@@ -1,13 +1,12 @@
-module Main where
+module Main (main) where
 
 import Network.Wai
 import Network.Wai.Handler.Warp (Port, defaultSettings, runSettings, setBeforeMainLoop, setPort, setTimeout)
 import Options.Applicative
 import Servant
+import Server (API, server)
 import System.IO (hPutStrLn, stderr)
 import Prelude
-
-import Server (API, server)
 
 userAPI :: Proxy API
 userAPI = Proxy
@@ -15,13 +14,13 @@ userAPI = Proxy
 app :: Application
 app = serve userAPI server
 
-data Params = Params
-  { port :: Int
+data Config = Config
+  { port :: Port
   , timeout :: Int
   }
 
-paramsParser :: Parser Params
-paramsParser = Params <$> port <*> timeout
+paramsParser :: Parser Config
+paramsParser = Config <$> port <*> timeout
  where
   port =
     option
@@ -44,20 +43,20 @@ paramsParser = Params <$> port <*> timeout
           <> metavar "INT"
       )
 
-opts :: ParserInfo Params
+opts :: ParserInfo Config
 opts = info (paramsParser <**> helper) (progDesc "Run KYC server")
 
-run :: Port -> Int -> IO ()
-run port timeout = do
+run :: Config -> IO ()
+run Config {..} = do
   runSettings settings app
  where
   settings =
-    setPort port
-      $ setTimeout timeout
-      $ setBeforeMainLoop (hPutStrLn stderr ("Listening on port " <> show port <> ", timeout " <> show timeout))
-      $ defaultSettings
+    setPort port $
+      setTimeout timeout $
+        setBeforeMainLoop (hPutStrLn stderr ("Listening on port " <> show port <> ", timeout " <> show timeout)) $
+          defaultSettings
 
 main :: IO ()
 main = do
-  Params port timeout <- execParser opts
-  run port timeout
+  config <- execParser opts
+  run config
