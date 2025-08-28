@@ -25,4 +25,4 @@ curl -X POST -H "Content-Type: application/json" --connect-timeout 300 -d @examp
 ```
 
 ## Docs
-To view the documentation, open the file `docs/index.html` using your browser
+To view the documentation, click [here](http://htmlpreview.github.io/?https://github.com/zkFold/zk-kyc/blob/main/docs/index.html)
