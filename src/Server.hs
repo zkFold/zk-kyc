@@ -3,7 +3,7 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 -- | Module providing KYC server interface
-module Server (API, server, VerifierInput, ProverOutput, ProverInput) where
+module Server (ProveEndpoint, VerifyEndpoint, API, server, VerifierInput, ProverOutput, ProverInput) where
 
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import qualified Data.ByteString as BS
@@ -58,16 +58,19 @@ type K = 8
 type Context = (Interpreter Fr)
 
 -- | Input for '/prove' endpoint
+-- KYCData contains user information about his age and country
 newtype ProverInput = ProverInput (KYCData N K Auto Context)
   deriving Generic
 
 instance FromJSON ProverInput
 
 -- | Result for '/prove' endpoint
+-- Сontains proof of the correctness of the user's data, according to the contract
 data ProverOutput = ProverOutput (Input HaskellPlonkKYC) (Proof HaskellPlonkKYC)
   deriving Generic
 
 -- | Input for '/verify' endpoint
+-- Contains the proof of the user's data.
 data VerifierInput = VerifierInput (Input PlonkKYC) (Proof PlonkKYC)
   deriving Generic
 
@@ -100,10 +103,22 @@ instance (FromJSON c, FromJSON (ScalarFieldOf c)) => FromJSON (PlonkupProof c)
 
 instance FromJSON ProverOutput
 
+-- | '/prove' endpoint.
+type ProveEndpoint =
+  "prove"
+    :> ReqBody '[JSON] ProverInput
+    :> Post '[JSON] ProverOutput
+  -- ^ returns proof of user data
+
+-- | '/verify' endpoint.
+type VerifyEndpoint =
+  "verify"
+    :> ReqBody '[JSON] VerifierInput
+    :> Post '[JSON] Bool
+  -- ^ returns proof verification result
+
 -- | Public API of KYC server
-type API =
-  "prove" :> ReqBody '[JSON] ProverInput :> Post '[JSON] ProverOutput
-    :<|> "verify" :> ReqBody '[JSON] VerifierInput :> Post '[JSON] Bool
+type API = ProveEndpoint :<|> VerifyEndpoint
 
 type CompiledInput =
   (((U1 :*: U1) :*: (U1 :*: U1)) :*: (U1 :*: U1))

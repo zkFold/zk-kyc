@@ -54,9 +54,13 @@ exKYC = KYCData
 -- | KYC data type
 data KYCData n k r context = KYCData
   { kycType :: ByteString k context
+  -- ^ KYC Type
   , kycID :: UInt k r context
+  -- ^ Id of KYCData object
   , kycHash :: UInt k r context
+  -- ^ Hash of kycValue field
   , kycValue :: ByteString n context
+  -- ^ ByteString which contains user data in serialized form
   }
   deriving (Generic, Show)
 
@@ -96,11 +100,12 @@ instance
   => SymbolicInput (KYCData n k r context)
 
 -- | User data type
+-- In contracts it can be deserialized from kycValue
 data User r context = User
   { userAge :: UInt 8 r context
-  -- ^ user age
+  -- ^ User age
   , userCountry :: ByteString 10 context
-  -- ^ user country information
+  -- ^ User country information
   }
   deriving Generic
 
@@ -144,6 +149,7 @@ kycExample kycData hash =
     correctHash && validAge && validCountry
 
 -- | Example of user data
+-- Example user data. An example serialized representation of this data can be seen in example-json/kyc-data.json
 userA
   :: forall r context
    . ( Symbolic context

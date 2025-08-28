@@ -25,9 +25,4 @@ curl -X POST -H "Content-Type: application/json" --connect-timeout 300 -d @examp
 ```
 
 ## Docs
-For generate documenatation you can run
-```bash
-cabal haddock
-```
-
-After that you can open the `index.html` file using the displayed path.
+To view the documentation, open the file `docs/index.html` using your browser
